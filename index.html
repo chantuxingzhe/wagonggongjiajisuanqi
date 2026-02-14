@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>瓦工报价 · 多账单版 + 清单 + 撤销删除 (修复版)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #eef2f7;
+            padding: 16px;
+            color: #1a2b3e;
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 40px 40px 32px 32px;
+            box-shadow: 0 15px 35px rgba(0,20,40,0.12);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(145deg, #1a4a6f, #0f3b5a);
+            color: white;
+            padding: 28px 24px 22px;
+        }
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 500;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.85;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .project-info {
+            background: #f2f8ff;
+            margin: 20px 20px 10px;
+            padding: 20px 22px;
+            border-radius: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            border: 1px solid #c7daf0;
+        }
+        .project-info input {
+            flex: 1 1 160px;
+            padding: 16px 20px;
+            border: 1px solid #b9cee8;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            background: white;
+        }
+        .project-info input::placeholder {
+            color: #8ba0bc;
+            font-size: 1rem;
+        }
+        .bill-manage {
+            background: #ffffff;
+            margin: 0 20px 10px;
+            padding: 16px 22px;
+            border-radius: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            border: 1px solid #c7daf0;
+            background: #f9fcff;
+        }
+        .bill-label {
+            font-weight: 600;
+            color: #1a4f79;
+            font-size: 1.2rem;
+            white-space: nowrap;
+        }
+        .bill-name-input {
+            flex: 2 1 200px;
+            padding: 14px 18px;
+            border: 1px solid #b9cee8;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            background: white;
+        }
+        .bill-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+        .btn-bill {
+            background: white;
+            border: 1px solid #1a4a6f;
+            color: #1a4a6f;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.1s;
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-bill:hover {
+            background: #e2edfb;
+        }
+        .btn-bill.primary {
+            background: #1a4a6f;
+            color: white;
+            border: none;
+        }
+        .btn-bill.primary:hover {
+            background: #0f3452;
+        }
+        .summary-card {
+            background: white;
+            margin: 10px 20px 12px;
+            padding: 20px 24px;
+            border-radius: 32px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.02);
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #dde5ef;
+        }
+        .summary-item { text-align: center; flex: 1; }
+        .summary-label { font-size: 1.1rem; color: #5c718a; margin-bottom: 8px; }
+        .summary-number { font-size: 2.6rem; font-weight: 650; color: #1a4a6f; line-height: 1.2; }
+        .summary-unit { font-size: 1.1rem; color: #7a8da5; margin-left: 6px; }
+        .divider-vertical { width: 1px; height: 55px; background: #cfdbe9; }
+
+        .main-content { padding: 0 20px 24px; }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 24px 0 16px;
+        }
+        .section-header h2 {
+            font-size: 1.8rem;
+            font-weight: 520;
+            color: #163956;
+        }
+        .btn-add {
+            background: #e5eefb;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #1a4f79;
+            border: 1px solid #b8cfec;
+            cursor: pointer;
+            transition: 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 56px;
+        }
+        .btn-add:active { background: #ccdef5; transform: scale(0.97); }
+
+        .rooms-list { margin-bottom: 30px; }
+        .room-card {
+            background: #ffffff;
+            border-radius: 30px;
+            padding: 20px 22px;
+            margin-bottom: 16px;
+            border: 1px solid #e6ecf5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 2px 8px #e0e8f1;
+        }
+        .room-info { flex: 2 1 200px; }
+        .room-name {
+            font-size: 1.6rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .dim-badge {
+            background: #dde9f5;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 1rem;
+            color: #1c4e79;
+        }
+        .room-dims {
+            font-size: 1.1rem;
+            color: #47617c;
+            background: #f2f8ff;
+            padding: 6px 16px;
+            border-radius: 40px;
+            display: inline-block;
+            max-width: 100%;
+        }
+        .room-stats { flex: 1 1 160px; text-align: right; }
+        .room-price { font-size: 1.5rem; font-weight: 600; color: #103c5c; }
+        .room-area { font-size: 1.2rem; color: #446688; margin-top: 4px; }
+        .room-actions { display: flex; gap: 12px; margin-left: 12px; }
+        .btn-icon {
+            background: none; border: none; font-size: 2rem; width: 56px; height: 56px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #3b5777;
+        }
+        .btn-icon.edit-btn { color: #1f6392; }
+        .btn-icon.delete-btn { color: #b34141; }
+        .btn-icon:active { background: #dfe9f3; }
+
+        .extra-items {
+            background: #f6faff; border-radius: 36px; padding: 18px 12px 24px 12px;
+            margin: 16px 0 30px; border: 1px solid #d1e0f0;
+        }
+        #undoDeleteBar {
+            display: none;
+            background: #fff3cd;
+            padding: 12px 20px;
+            border-radius: 40px;
+            margin-bottom: 16px;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #ffe69c;
+        }
+        #undoDeleteBar span {
+            font-size: 1.2rem;
+            color: #856404;
+        }
+        #undoDeleteBar .btn-bill {
+            background: #1a4a6f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+        }
+        #undoDeleteBar .btn-bill:hover {
+            background: #0f3452;
+        }
+        .category-group {
+            background: white; border-radius: 28px; padding: 16px 14px 10px 14px;
+            margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0, 30, 60, 0.04);
+        }
+        .category-title {
+            font-size: 1.4rem; font-weight: 600; color: #1e4d77;
+            padding: 8px 10px 14px 10px; border-bottom: 2px dashed #b8d1e9; margin-bottom: 12px;
+        }
+        .extra-row {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+            padding: 16px 8px; border-bottom: 1px solid #e2ecf9;
+        }
+        .extra-row:last-child { border-bottom: none; }
+        .extra-name { flex: 2 1 160px; font-weight: 500; color: #1d3c5e; font-size: 1.2rem; }
+        .extra-qty { flex: 1 1 90px; min-width: 80px; }
+        .extra-qty input, .extra-price input {
+            width: 100%; padding: 14px 12px; border: 1px solid #c4d4e8;
+            border-radius: 40px; font-size: 1.1rem; background: white; text-align: center;
+        }
+        .extra-unit { flex: 0 0 50px; color: #3a6188; font-weight: 500; font-size: 1.2rem; text-align: center; }
+        .extra-price { flex: 1 1 100px; min-width: 90px; }
+        .extra-subtotal { flex: 1 1 100px; font-weight: 600; color: #12416b; font-size: 1.2rem; text-align: right; padding-right: 8px; white-space: nowrap; }
+        .extra-delete { flex: 0 0 48px; text-align: center; }
+        .del-item-btn {
+            background: none; border: none; font-size: 2rem; color: #aa4a4a;
+            cursor: pointer; padding: 8px; line-height: 1; border-radius: 50%;
+            width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+        }
+        .del-item-btn:active { background: #fbe6e6; }
+        .add-extra-line { display: flex; justify-content: center; margin-top: 22px; }
+        .btn-add-extra {
+            background: white; border: 2px dashed #80a6c7; padding: 18px 28px;
+            border-radius: 70px; font-size: 1.3rem; color: #1f5885; font-weight: 500;
+            cursor: pointer; width: 100%; transition: 0.1s; min-height: 70px;
+        }
+        .btn-add-extra:active { background: #e2effb; }
+
+        .grand-total {
+            background: #163956; color: white; padding: 26px 28px; border-radius: 32px;
+            margin: 24px 0 20px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 1.8rem; font-weight: 600;
+        }
+        .total-label { font-size: 1.6rem; font-weight: 400; opacity: 0.9; }
+        .total-value { font-size: 2.6rem; letter-spacing: 1px; }
+        .total-unit { font-size: 1.2rem; opacity: 0.7; margin-left: 8px; }
+
+        .btn-detail {
+            background: white;
+            border: 2px solid #1a4a6f;
+            color: #1a4a6f;
+            padding: 18px 24px;
+            border-radius: 60px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+            transition: 0.1s;
+        }
+        .btn-detail:active { background: #e2edfb; }
+
+        .modal-large {
+            max-width: 800px;
+        }
+        .detail-section {
+            margin-bottom: 30px;
+        }
+        .detail-section h4 {
+            font-size: 1.6rem;
+            color: #1a4a6f;
+            border-bottom: 2px solid #b8d1e9;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.1rem;
+        }
+        .detail-table th {
+            text-align: left;
+            background: #eef2f7;
+            padding: 12px 8px;
+            font-weight: 600;
+        }
+        .detail-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #dde5ef;
+        }
+        .detail-table td:last-child, .detail-table th:last-child {
+            text-align: right;
+        }
+        .detail-table td:nth-child(3), .detail-table th:nth-child(3) {
+            text-align: right;
+        }
+        .total-row {
+            font-weight: 700;
+            background: #f2f8ff;
+            font-size: 1.3rem;
+        }
+        .print-btn {
+            background: #1a4a6f;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #detailModal.modal.show, #detailModal .modal-content { visibility: visible; }
+            #detailModal .modal-content { position: absolute; left: 0; top: 0; width: 100%; background: white; box-shadow: none; }
+            .print-btn, .close-btn { display: none; }
+        }
+
+        .modal {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white; width: 100%; max-width: 700px; border-radius: 52px;
+            padding: 32px 28px; animation: slide 0.2s; max-height: 90vh; overflow-y: auto;
+        }
+        @keyframes slide {
+            from { opacity:0.7; transform: translateY(15px); }
+            to { opacity:1; transform: translateY(0); }
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;
+        }
+        .modal-header h3 { font-size: 2.2rem; font-weight: 500; color: #133a57; }
+        .close-btn {
+            background: none; border: none; font-size: 3rem; cursor: pointer; color: #6a7f9b;
+            width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+        }
+        .input-group { margin-bottom: 22px; }
+        .input-group label { display: block; font-weight: 500; color: #1e4c75; margin-bottom: 8px; font-size: 1.2rem; }
+        .input-field {
+            width: 100%; padding: 18px 22px; font-size: 1.2rem; border: 1.5px solid #cbd9ec;
+            border-radius: 50px; background: #f4faff;
+        }
+        .input-field:focus { outline: none; border-color: #1f6fb0; background: white; }
+
+        .bill-list { margin-top: 20px; }
+        .bill-item {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+            background: #f2f8ff; padding: 18px; border-radius: 40px; margin-bottom: 16px;
+            border: 1px solid #cddef0;
+        }
+        .bill-info { flex: 3 1 200px; }
+        .bill-name { font-size: 1.4rem; font-weight: 600; color: #1a4f79; margin-bottom: 4px; }
+        .bill-details { font-size: 1.1rem; color: #47617c; }
+        .bill-actions { display: flex; gap: 8px; margin-left: auto; }
+        .btn-bill-action {
+            background: white; border: 1px solid #1a4a6f; color: #1a4a6f;
+            padding: 12px 16px; border-radius: 40px; font-size: 1rem; font-weight: 500;
+            cursor: pointer; min-width: 70px;
+        }
+        .btn-bill-action:hover { background: #e2edfb; }
+        .btn-bill-action.delete:hover { background: #fbe6e6; color: #b34141; border-color: #b34141; }
+
+        .area-group { margin-bottom: 30px; }
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .group-header h4 { font-size: 1.4rem; font-weight: 600; color: #1a4f79; }
+        .btn-add-group {
+            background: white; border: 2px dashed #6c9ac3; padding: 12px 24px; border-radius: 50px;
+            font-size: 1.2rem; color: #1a4f79; font-weight: 500; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px; min-height: 60px;
+        }
+        .btn-add-group:active { background: #e3f0fd; }
+        .area-row {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+            background: #f2f8ff; padding: 16px; border-radius: 40px; margin-bottom: 16px;
+            border: 1px solid #cddef0;
+        }
+        .area-row input {
+            padding: 14px 10px; border: 1px solid #c4d4e8; border-radius: 40px;
+            text-align: center; background: white; font-size: 1.1rem;
+        }
+        .area-name { flex: 0 1 100px; min-width: 80px; }
+        .area-length { flex: 1 1 80px; min-width: 80px; }
+        .area-width { flex: 1 1 80px; min-width: 80px; }
+        .area-deduct { flex: 1 1 70px; min-width: 70px; }
+        .area-price { flex: 1 1 80px; min-width: 80px; }
+        .area-delete { flex: 0 0 56px; }
+        .btn-remove-area {
+            background: none; border: none; font-size: 2.2rem; color: #b34141;
+            cursor: pointer; width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-remove-area:active { background: #fad7d7; }
+        .room-total-preview {
+            background: #dde9f5; padding: 20px; border-radius: 40px; margin: 24px 0;
+            display: flex; justify-content: space-between; font-size: 1.4rem; font-weight: 500;
+        }
+        .room-total-preview span { color: #00335c; font-weight: 700; font-size: 1.8rem; }
+        .modal-actions { display: flex; gap: 16px; margin-top: 24px; }
+        .btn-primary, .btn-secondary {
+            flex: 1; padding: 18px; border: none; border-radius: 60px;
+            font-size: 1.4rem; font-weight: 600; cursor: pointer; min-height: 70px;
+        }
+        .btn-primary { background: #1a4a6f; color: white; }
+        .btn-secondary { background: #e1ecf7; color: #1e4b74; }
+        .btn-primary:active { background: #0e3450; }
+        .btn-secondary:active { background: #cbddf2; }
+        .empty-rooms { text-align: center; padding: 40px; color: #7f94ae; background: #f3f9ff; border-radius: 50px; font-size: 1.4rem; }
+
+        @media print {
+            body { background: white; padding: 0; font-size: 16pt; }
+            .container { max-width: 100%; box-shadow: none; border-radius: 0; }
+            .project-info input, .bill-manage, .btn-add, .room-actions, .extra-delete, .add-extra-line, .modal, .btn-icon, .btn-bill, .btn-add-extra, .del-item-btn, .btn-add-group, .close-btn, .modal-actions, .btn-detail {
+                display: none !important;
+            }
+            .project-info { border: none; background: none; padding: 0 0 10px; }
+            .project-info input { display: inline; border: none; background: none; font-weight: bold; padding: 0; width: auto; font-size: 14pt; }
+            .summary-card { border: 1px solid #ccc; box-shadow: none; }
+            .room-card { break-inside: avoid; border: 1px solid #aaa; }
+            .extra-row { break-inside: avoid; }
+            .grand-total { background: #eee; color: black; border: 2px solid #333; }
+            .header { background: #1a4a6f; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🧾 瓦工报价 · 多账单版</h1>
+        <p>🔨 保存多个工地 · 随时翻看历史</p>
+    </div>
+
+    <div class="project-info">
+        <input type="text" id="projectName" placeholder="小区名称" value="">
+        <input type="text" id="unitName" placeholder="单元/楼栋" value="">
+        <input type="text" id="contractor" placeholder="包工头/负责人" value="">
+    </div>
+
+    <div class="bill-manage">
+        <span class="bill-label">📁 当前账单</span>
+        <input type="text" id="billNameInput" class="bill-name-input" placeholder="输入账单名称" value="未命名">
+        <div class="bill-buttons">
+            <button class="btn-bill primary" id="saveBillBtn">💾 保存</button>
+            <button class="btn-bill" id="saveAsBillBtn">📋 另存为</button>
+            <button class="btn-bill" id="historyBillBtn">📜 历史</button>
+            <button class="btn-bill" id="resetBillBtn">🔄 新建工地</button>
+        </div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-item"><div class="summary-label">铺砖总面积</div><span class="summary-number" id="totalAreaDisplay">0.00</span><span class="summary-unit">㎡</span></div>
+        <div class="divider-vertical"></div>
+        <div class="summary-item"><div class="summary-label">房间数</div><span class="summary-number" id="roomCountDisplay">0</span><span class="summary-unit">间</span></div>
+        <div class="divider-vertical"></div>
+        <div class="summary-item"><div class="summary-label">附加项</div><span class="summary-number" id="extraCountDisplay">0</span><span class="summary-unit">项</span></div>
+    </div>
+
+    <div class="main-content">
+        <div class="section-header">
+            <h2>📐 铺砖空间</h2>
+            <button class="btn-add" id="addRoomBtn">➕ 添加房间</button>
+        </div>
+        <div id="roomsList" class="rooms-list"></div>
+
+        <div class="section-header" style="margin-top: 8px;">
+            <h2>⚙️ 附加施工项</h2>
+        </div>
+        <div class="extra-items">
+            <div id="undoDeleteBar">
+                <span>🗑️ 已删除一项，可以撤销</span>
+                <button id="undoDeleteBtn" class="btn-bill">↩️ 撤销</button>
+            </div>
+            <div id="extraItemsContainer"></div>
+        </div>
+
+        <button class="btn-detail" id="generateDetailBtn">📋 生成详细清单</button>
+
+        <div class="grand-total">
+            <span class="total-label">总报价</span>
+            <span><span class="total-value" id="finalTotalPrice">0.00</span><span class="total-unit">元</span></span>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="roomModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">✏️ 编辑房间</h3>
+            <button class="close-btn" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="input-group">
+            <label>房间名称</label>
+            <input type="text" id="roomNameInput" class="input-field" placeholder="例如: 客厅" value="客厅">
+        </div>
+        <div class="areas-section">
+            <div class="area-group" id="groundGroup">
+                <div class="group-header">
+                    <h4>🟫 地面区域</h4>
+                    <button class="btn-add-group" id="addGroundBtn">➕ 添加地面</button>
+                </div>
+                <div id="groundAreasContainer"></div>
+            </div>
+            <div class="area-group" id="wallGroup">
+                <div class="group-header">
+                    <h4>🧱 墙面区域</h4>
+                    <button class="btn-add-group" id="addWallBtn">➕ 添加墙面</button>
+                </div>
+                <div id="wallAreasContainer"></div>
+            </div>
+        </div>
+        <div class="room-total-preview" id="roomTotalPreview">
+            <span>本房间合计</span>
+            <span><span id="roomTotalArea">0.00</span> ㎡  /  <span id="roomTotalPrice">0.00</span> 元</span>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="cancelModalBtn">取消</button>
+            <button class="btn-primary" id="saveRoomBtn">保存房间</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="historyModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📂 历史账单</h3>
+            <button class="close-btn" id="closeHistoryBtn">&times;</button>
+        </div>
+        <div id="billListContainer" class="bill-list"></div>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="closeHistoryBtn2">关闭</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="detailModal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3>📋 详细清单</h3>
+            <button class="close-btn" id="closeDetailBtn">&times;</button>
+        </div>
+        <div id="detailContent"></div>
+        <button class="print-btn" id="printDetailBtn">🖨️ 打印清单</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    // 深拷贝函数
+    function deepCopy(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+
+    // 默认房间数据
+    let rooms = [
+        { id: 'r1', name: '客厅', areas: [{ id: 'r1_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
+        { id: 'r2', name: '主卧', areas: [{ id: 'r2_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
+        { id: 'r3', name: '次卧', areas: [{ id: 'r3_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
+        { id: 'r4', name: '三卧', areas: [{ id: 'r4_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
+        { id: 'r5', name: '厨房', areas: [
+            { id: 'r5_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' },
+            { id: 'r5_area2', type: 'wall', name: '墙面', length: '', width: '', deduct: '', unitPrice: '' }
+        ]},
+        { id: 'r6', name: '主卫', areas: [
+            { id: 'r6_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' },
+            { id: 'r6_area2', type: 'wall', name: '墙面', length: '', width: '', deduct: '', unitPrice: '' }
+        ]},
+        { id: 'r7', name: '次卫', areas: [
+            { id: 'r7_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' },
+            { id: 'r7_area2', type: 'wall', name: '墙面', length: '', width: '', deduct: '', unitPrice: '' }
+        ]},
+        { id: 'r8', name: '主阳台', areas: [
+            { id: 'r8_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' },
+            { id: 'r8_area2', type: 'wall', name: '墙面', length: '', width: '', deduct: '', unitPrice: '' }
+        ]},
+        { id: 'r9', name: '次阳台', areas: [
+            { id: 'r9_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' },
+            { id: 'r9_area2', type: 'wall', name: '墙面', length: '', width: '', deduct: '', unitPrice: '' }
+        ]},
+        { id: 'r10', name: '过道', areas: [{ id: 'r10_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] }
+    ];
+
+    // 保存默认房间的副本，用于重置
+    const DEFAULT_ROOMS = deepCopy(rooms);
+
+    // 附加项列表
+    let extraItems = [
+        { id: 'e001', cat: '🔹 倒角/磨边', name: '倒角/海棠角', unit: '米', qty: 0, price: 0 },
+        { id: 'e002', cat: '🔹 倒角/磨边', name: '圆弧倒角', unit: '米', qty: 0, price: 0 },
+        { id: 'e003', cat: '🔹 倒角/磨边', name: '瓷砖磨边', unit: '米', qty: 0, price: 0 },
+        { id: 'e004', cat: '🔹 防水/防潮', name: '防水处理(地面)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e005', cat: '🔹 防水/防潮', name: '防水处理(墙面)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e006', cat: '🔹 防水/防潮', name: '防滑线/开槽', unit: '米', qty: 0, price: 0 },
+        { id: 'e007', cat: '🔹 开孔/预埋', name: '插座开孔', unit: '个', qty: 0, price: 0 },
+        { id: 'e008', cat: '🔹 开孔/预埋', name: '水管开孔', unit: '个', qty: 0, price: 0 },
+        { id: 'e009', cat: '🔹 开孔/预埋', name: '地漏开孔', unit: '个', qty: 0, price: 0 },
+        { id: 'e010', cat: '🔹 开孔/预埋', name: '排气孔开孔', unit: '个', qty: 0, price: 0 },
+        { id: 'e011', cat: '🔹 基层处理', name: '拉毛', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e012', cat: '🔹 基层处理', name: '墙面挂网', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e013', cat: '🔹 基层处理', name: '阴阳角找平', unit: '米', qty: 0, price: 0 },
+        { id: 'e014', cat: '🔹 基层处理', name: '地面找平(水泥砂浆)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e015', cat: '🔹 基层处理', name: '地面固化(地固)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e016', cat: '🔹 特殊造型', name: '拼花/波打线', unit: '米', qty: 0, price: 0 },
+        { id: 'e017', cat: '🔹 特殊造型', name: '斜铺/人字铺', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e018', cat: '🔹 特殊造型', name: '六角砖铺贴', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e019', cat: '🔹 特殊造型', name: '地台/榻榻米铺贴', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e020', cat: '🔹 特殊造型', name: '壁龛制作', unit: '个', qty: 0, price: 0 },
+        { id: 'e021', cat: '🔹 特殊造型', name: '楼梯踏步(每级)', unit: '级', qty: 0, price: 0 },
+        { id: 'e022', cat: '🔹 瓷砖加工', name: '瓷砖切割(直切)', unit: '米', qty: 0, price: 0 },
+        { id: 'e023', cat: '🔹 瓷砖加工', name: '瓷砖切割(异形)', unit: '刀', qty: 0, price: 0 },
+        { id: 'e024', cat: '🔹 瓷砖加工', name: '瓷砖背胶', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e025', cat: '🔹 辅料/填缝', name: '美缝(环氧彩砂)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e026', cat: '🔹 辅料/填缝', name: '美缝(普通)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e027', cat: '🔹 辅料/填缝', name: '填缝剂', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e028', cat: '🔹 门槛/窗台', name: '门槛石安装', unit: '块', qty: 0, price: 0 },
+        { id: 'e029', cat: '🔹 门槛/窗台', name: '窗台石安装', unit: '米', qty: 0, price: 0 },
+        { id: 'e030', cat: '🔹 门槛/窗台', name: '踢脚线铺贴(暗贴)', unit: '米', qty: 0, price: 0 },
+        { id: 'e031', cat: '🔹 门槛/窗台', name: '踢脚线铺贴(明贴)', unit: '米', qty: 0, price: 0 },
+        { id: 'e032', cat: '🔹 包管/砌筑', name: '包下水管(砖砌)', unit: '根', qty: 0, price: 0 },
+        { id: 'e033', cat: '🔹 包管/砌筑', name: '包烟道', unit: '根', qty: 0, price: 0 },
+        { id: 'e034', cat: '🔹 包管/砌筑', name: '砌墙(12墙)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e035', cat: '🔹 包管/砌筑', name: '抹灰', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e036', cat: '🔹 拆除/改造', name: '铲除旧地砖', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e037', cat: '🔹 拆除/改造', name: '铲除旧墙砖', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e038', cat: '🔹 拆除/改造', name: '铲除防水层', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e039', cat: '🔹 拆除/改造', name: '水电开槽回填', unit: '米', qty: 0, price: 0 },
+        { id: 'e040', cat: '🔹 搬运/保护', name: '材料搬运(每层)', unit: '层', qty: 0, price: 0 },
+        { id: 'e041', cat: '🔹 搬运/保护', name: '垃圾清运(每车)', unit: '车', qty: 0, price: 0 },
+        { id: 'e042', cat: '🔹 搬运/保护', name: '成品保护膜', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e043', cat: '🔹 其他', name: '地漏安装', unit: '个', qty: 0, price: 0 },
+        { id: 'e044', cat: '🔹 其他', name: '止逆阀安装', unit: '个', qty: 0, price: 0 },
+        { id: 'e045', cat: '🔹 其他', name: '脚手架租赁', unit: '天', qty: 0, price: 0 },
+        { id: 'e046', cat: '🔹 其他', name: '夜间施工费', unit: '项', qty: 0, price: 0 },
+        { id: 'e047', cat: '🔹 其他', name: '远程调遣费', unit: '次', qty: 0, price: 0 },
+        { id: 'e048', cat: '🔹 其他', name: '售后维修(备用)', unit: '小时', qty: 0, price: 0 },
+    ];
+
+    const DEFAULT_EXTRA_ITEMS = deepCopy(extraItems);
+
+    // 当前编辑的房间ID
+    let currentEditId = null;
+
+    // ---------- 多账单管理 ----------
+    let billList = [];
+    let currentBillId = null;
+    const BILL_LIST_KEY = 'waguang_billList';
+
+    function loadBillList() {
+        const saved = localStorage.getItem(BILL_LIST_KEY);
+        if (saved) {
+            try {
+                billList = JSON.parse(saved);
+            } catch (e) {
+                billList = [];
+            }
+        } else {
+            billList = [];
+        }
+    }
+
+    function saveBillList() {
+        localStorage.setItem(BILL_LIST_KEY, JSON.stringify(billList));
+    }
+
+    function getCurrentBillData() {
+        return {
+            rooms: deepCopy(rooms),
+            extraItems: deepCopy(extraItems),
+            projectName: projectNameInput.value,
+            unitName: unitNameInput.value,
+            contractor: contractorInput.value,
+        };
+    }
+
+    function applyBillData(data) {
+        rooms = deepCopy(data.rooms || []);
+        extraItems = deepCopy(data.extraItems || []);
+        projectNameInput.value = data.projectName || '';
+        unitNameInput.value = data.unitName || '';
+        contractorInput.value = data.contractor || '';
+        renderRooms();
+        renderExtraItems();
+        updateSummary();
+    }
+
+    function saveCurrentBill(billName, isNew = false) {
+        if (!billName.trim()) {
+            alert('请输入账单名称');
+            return false;
+        }
+        const data = getCurrentBillData();
+        if (currentBillId && !isNew) {
+            const index = billList.findIndex(b => b.id === currentBillId);
+            if (index !== -1) {
+                billList[index].name = billName;
+                billList[index].data = data;
+                billList[index].updatedAt = Date.now();
+            } else {
+                currentBillId = null;
+            }
+        }
+        if (!currentBillId) {
+            const newBill = {
+                id: 'bill_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+                name: billName,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                data: data,
+            };
+            billList.push(newBill);
+            currentBillId = newBill.id;
+        }
+        saveBillList();
+        document.getElementById('billNameInput').value = billName;
+        return true;
+    }
+
+    function loadBillById(billId) {
+        const bill = billList.find(b => b.id === billId);
+        if (!bill) return false;
+        currentBillId = bill.id;
+        document.getElementById('billNameInput').value = bill.name;
+        applyBillData(bill.data);
+        return true;
+    }
+
+    function deleteBillById(billId) {
+        billList = billList.filter(b => b.id !== billId);
+        if (currentBillId === billId) {
+            currentBillId = null;
+            document.getElementById('billNameInput').value = '未命名';
+        }
+        saveBillList();
+    }
+
+    function renderHistoryModal() {
+        const container = document.getElementById('billListContainer');
+        if (billList.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#7f94ae;">暂无保存的账单</div>';
+            return;
+        }
+        const sorted = [...billList].sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        let html = '';
+        sorted.forEach(bill => {
+            const date = new Date(bill.updatedAt || bill.createdAt).toLocaleString();
+            const totalPrice = calculateTotalPrice(bill.data);
+            html += `
+            <div class="bill-item" data-id="${bill.id}">
+                <div class="bill-info">
+                    <div class="bill-name">${bill.name}</div>
+                    <div class="bill-details">${bill.data.projectName || '未填小区'} · ${bill.data.unitName || ''} · ${bill.data.contractor || ''} · 总价 ${totalPrice}元</div>
+                    <div class="bill-details" style="font-size:0.9rem; color:#888;">${date}</div>
+                </div>
+                <div class="bill-actions">
+                    <button class="btn-bill-action load-bill" data-id="${bill.id}">加载</button>
+                    <button class="btn-bill-action rename-bill" data-id="${bill.id}">重命名</button>
+                    <button class="btn-bill-action delete" data-id="${bill.id}">删除</button>
+                </div>
+            </div>`;
+        });
+        container.innerHTML = html;
+
+        container.querySelectorAll('.load-bill').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.target.dataset.id;
+                loadBillById(id);
+                closeHistoryModal();
+            });
+        });
+        container.querySelectorAll('.rename-bill').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.target.dataset.id;
+                const bill = billList.find(b => b.id === id);
+                if (!bill) return;
+                const newName = prompt('输入新账单名称', bill.name);
+                if (newName && newName.trim()) {
+                    bill.name = newName.trim();
+                    bill.updatedAt = Date.now();
+                    saveBillList();
+                    if (currentBillId === id) {
+                        document.getElementById('billNameInput').value = newName.trim();
+                    }
+                    renderHistoryModal();
+                }
+            });
+        });
+        container.querySelectorAll('.delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.target.dataset.id;
+                if (confirm('确定删除此账单吗？')) {
+                    deleteBillById(id);
+                    renderHistoryModal();
+                }
+            });
+        });
+    }
+
+    function calculateTotalPrice(data) {
+        let totalRoomPrice = 0;
+        (data.rooms || []).forEach(room => {
+            (room.areas || []).forEach(area => {
+                const net = Math.max(0, (parseFloat(area.length)||0) * (parseFloat(area.width)||0) - (parseFloat(area.deduct)||0));
+                totalRoomPrice += net * (parseFloat(area.unitPrice)||0);
+            });
+        });
+        let totalExtraPrice = 0;
+        (data.extraItems || []).forEach(e => totalExtraPrice += (e.qty||0) * (e.price||0));
+        return (totalRoomPrice + totalExtraPrice).toFixed(2);
+    }
+
+    const historyModal = document.getElementById('historyModal');
+    function openHistoryModal() {
+        renderHistoryModal();
+        historyModal.classList.add('show');
+    }
+    function closeHistoryModal() {
+        historyModal.classList.remove('show');
+    }
+
+    // DOM 元素
+    const roomsListEl = document.getElementById('roomsList');
+    const totalAreaDisplay = document.getElementById('totalAreaDisplay');
+    const roomCountDisplay = document.getElementById('roomCountDisplay');
+    const extraCountDisplay = document.getElementById('extraCountDisplay');
+    const finalTotalPrice = document.getElementById('finalTotalPrice');
+    const extraContainer = document.getElementById('extraItemsContainer');
+
+    const projectNameInput = document.getElementById('projectName');
+    const unitNameInput = document.getElementById('unitName');
+    const contractorInput = document.getElementById('contractor');
+
+    const billNameInput = document.getElementById('billNameInput');
+    const saveBillBtn = document.getElementById('saveBillBtn');
+    const saveAsBillBtn = document.getElementById('saveAsBillBtn');
+    const historyBillBtn = document.getElementById('historyBillBtn');
+    const resetBillBtn = document.getElementById('resetBillBtn');
+
+    // 撤销相关
+    const undoBar = document.getElementById('undoDeleteBar');
+    const undoBtn = document.getElementById('undoDeleteBtn');
+    let deletedExtraItemsStack = [];   // 改为栈，支持多次撤销
+
+    function showUndoBar() {
+        undoBar.style.display = 'flex';
+    }
+
+    function hideUndoBar() {
+        undoBar.style.display = 'none';
+        deletedExtraItemsStack = [];   // 清空栈
+    }
+
+    // 撤销点击事件
+    undoBtn.addEventListener('click', function() {
+        if (deletedExtraItemsStack.length === 0) {
+            hideUndoBar();
+            return;
+        }
+        const restoredItem = deletedExtraItemsStack.pop(); // 弹出最近删除的项
+        extraItems.push(restoredItem);
+        renderExtraItems(); // 重新渲染以显示恢复的项
+        updateSummary();
+
+        // 如果栈中还有剩余项，继续显示撤销条；否则隐藏
+        if (deletedExtraItemsStack.length > 0) {
+            undoBar.style.display = 'flex';
+        } else {
+            undoBar.style.display = 'none';
+        }
+    });
+
+    // 模态框元素
+    const modal = document.getElementById('roomModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const roomNameInput = document.getElementById('roomNameInput');
+    const groundContainer = document.getElementById('groundAreasContainer');
+    const wallContainer = document.getElementById('wallAreasContainer');
+    const addGroundBtn = document.getElementById('addGroundBtn');
+    const addWallBtn = document.getElementById('addWallBtn');
+    const roomTotalAreaSpan = document.getElementById('roomTotalArea');
+    const roomTotalPriceSpan = document.getElementById('roomTotalPrice');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    const saveRoomBtn = document.getElementById('saveRoomBtn');
+
+    const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+    const closeHistoryBtn2 = document.getElementById('closeHistoryBtn2');
+
+    // 辅助函数
+    function parseInput(val) {
+        let num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
+    }
+
+    function calcAreaNet(length, width, deduct) {
+        return Math.max(0, parseInput(length) * parseInput(width) - parseInput(deduct));
+    }
+
+    // 渲染房间列表
+    function renderRooms() {
+        if (rooms.length === 0) {
+            roomsListEl.innerHTML = '<div class="empty-rooms">➕ 点击"添加房间"开始</div>';
+        } else {
+            let html = '';
+            rooms.forEach(room => {
+                let roomArea = 0, roomPrice = 0;
+                let areasSummary = [];
+                room.areas.forEach(area => {
+                    const net = calcAreaNet(area.length, area.width, area.deduct);
+                    roomArea += net;
+                    roomPrice += net * parseInput(area.unitPrice);
+                    let sizeStr = (area.length === '' && area.width === '') ? '未填' : `${area.length || '?'}x${area.width || '?'}`;
+                    areasSummary.push(`${area.name || '区域'}: ${sizeStr}`);
+                });
+                let summaryStr = areasSummary.join(' · ');
+                if (summaryStr.length > 30) summaryStr = summaryStr.substr(0,27)+'…';
+                html += `
+                <div class="room-card" data-id="${room.id}">
+                    <div class="room-info">
+                        <div class="room-name">${room.name} <span class="dim-badge">${room.areas.length}块区域</span></div>
+                        <div class="room-dims">${summaryStr}</div>
+                    </div>
+                    <div class="room-stats">
+                        <div class="room-price">${roomPrice.toFixed(2)}元</div>
+                        <div class="room-area">${roomArea.toFixed(2)}㎡</div>
+                    </div>
+                    <div class="room-actions">
+                        <button class="btn-icon edit-btn" data-id="${room.id}">✏️</button>
+                        <button class="btn-icon delete-btn" data-id="${room.id}">🗑️</button>
+                    </div>
+                </div>`;
+            });
+            roomsListEl.innerHTML = html;
+        }
+        updateSummary();
+    }
+
+    // 渲染附加项
+    function renderExtraItems() {
+        const groups = {};
+        extraItems.forEach(item => { if (!groups[item.cat]) groups[item.cat] = []; groups[item.cat].push(item); });
+        let html = '';
+        for (let cat in groups) {
+            html += `<div class="category-group"><div class="category-title">${cat}</div>`;
+            groups[cat].forEach(item => {
+                const subtotal = item.qty * item.price;
+                html += `<div class="extra-row" data-id="${item.id}"><span class="extra-name">${item.name}</span><div class="extra-qty"><input type="number" class="extra-qty-input" data-id="${item.id}" step="0.01" min="0" value="${item.qty}"></div><span class="extra-unit">${item.unit}</span><div class="extra-price"><input type="number" class="extra-price-input" data-id="${item.id}" step="0.1" min="0" value="${item.price}"></div><span class="extra-subtotal" id="sub-${item.id}">${subtotal.toFixed(2)}</span><div class="extra-delete"><button class="del-item-btn" data-id="${item.id}">🗑️</button></div></div>`;
+            });
+            html += '</div>';
+        }
+        html += `<div class="add-extra-line"><button class="btn-add-extra" id="addCustomExtraBtn">➕ 添加自定义项目</button></div>`;
+        extraContainer.innerHTML = html;
+
+        // 绑定输入事件（隐藏撤销条）
+        document.querySelectorAll('.extra-qty-input').forEach(inp => {
+            inp.addEventListener('input', function(e) {
+                const id = this.dataset.id; const val = parseFloat(this.value) || 0;
+                const item = extraItems.find(i => i.id === id); if (item) { item.qty = val; updateExtraSubtotal(id); updateSummary(); }
+                hideUndoBar(); // 修改数据时隐藏撤销
+            });
+        });
+        document.querySelectorAll('.extra-price-input').forEach(inp => {
+            inp.addEventListener('input', function(e) {
+                const id = this.dataset.id; const val = parseFloat(this.value) || 0;
+                const item = extraItems.find(i => i.id === id); if (item) { item.price = val; updateExtraSubtotal(id); updateSummary(); }
+                hideUndoBar(); // 修改数据时隐藏撤销
+            });
+        });
+        // 绑定删除事件（保存被删项，推入栈，重新渲染，显示撤销条）
+        document.querySelectorAll('.del-item-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const item = extraItems.find(i => i.id === id);
+                if (item) {
+                    deletedExtraItemsStack.push(deepCopy(item)); // 保存深拷贝
+                }
+                extraItems = extraItems.filter(i => i.id !== id);
+                renderExtraItems(); // 重新渲染
+                if (deletedExtraItemsStack.length > 0) {
+                    undoBar.style.display = 'flex';
+                }
+                updateSummary();
+            });
+        });
+        // 绑定添加自定义按钮
+        document.getElementById('addCustomExtraBtn')?.addEventListener('click', function() {
+            addCustomExtra();
+            hideUndoBar(); // 添加新项时隐藏撤销
+        });
+    }
+
+    function updateExtraSubtotal(id) {
+        const span = document.getElementById(`sub-${id}`);
+        const item = extraItems.find(i => i.id === id);
+        if (span && item) span.innerText = (item.qty * item.price).toFixed(2);
+    }
+
+    function addCustomExtra() {
+        let name = prompt('输入项目名称', '现场管理费');
+        if (name === null) return;
+        name = name.trim() || '自定义';
+        let unit = prompt('单位 (m/㎡/个/项)', '项');
+        if (unit === null) return;
+        unit = unit.trim() || '项';
+        let priceInput = prompt('默认单价', '0');
+        if (priceInput === null) return;
+        const price = parseFloat(priceInput) || 0;
+        const newId = 'extra_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+        extraItems.push({ id: newId, cat: '📌 自定义', name: name, unit: unit, qty: 0, price: price });
+        renderExtraItems();
+        updateSummary();
+    }
+
+    // 更新全局汇总
+    function updateSummary() {
+        let totalRoomArea = 0, totalRoomPrice = 0;
+        rooms.forEach(room => {
+            room.areas.forEach(area => {
+                const net = calcAreaNet(area.length, area.width, area.deduct);
+                totalRoomArea += net;
+                totalRoomPrice += net * parseInput(area.unitPrice);
+            });
+        });
+        let totalExtraPrice = 0;
+        extraItems.forEach(e => totalExtraPrice += e.qty * e.price);
+        const finalTotal = totalRoomPrice + totalExtraPrice;
+
+        totalAreaDisplay.innerText = totalRoomArea.toFixed(2);
+        roomCountDisplay.innerText = rooms.length;
+        extraCountDisplay.innerText = extraItems.length;
+        finalTotalPrice.innerText = finalTotal.toFixed(2);
+    }
+
+    // 模态框区域管理
+    function createAreaRow(area = null, type = 'ground') {
+        const areaId = area ? area.id : 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+        let name = area ? area.name : (type === 'ground' ? '地面' : '墙面');
+        const length = area && area.length !== '' ? area.length : '';
+        const width = area && area.width !== '' ? area.width : '';
+        const deduct = area && area.deduct !== '' ? area.deduct : '';
+        const price = area && area.unitPrice !== '' ? area.unitPrice : '';
+
+        const div = document.createElement('div');
+        div.className = 'area-row';
+        div.dataset.areaId = areaId;
+        div.innerHTML = `
+            <input type="text" class="area-name" placeholder="名称" value="${name}">
+            <input type="number" class="area-length" placeholder="长" step="0.01" min="0" value="${length}">
+            <input type="number" class="area-width" placeholder="宽" step="0.01" min="0" value="${width}">
+            <input type="number" class="area-deduct" placeholder="扣除(㎡)" step="0.1" min="0" value="${deduct}">
+            <input type="number" class="area-price" placeholder="单价" step="1" min="0" value="${price}">
+            <div class="area-delete"><button class="btn-remove-area" type="button">🗑️</button></div>
+        `;
+        const inputs = div.querySelectorAll('input');
+        inputs.forEach(inp => inp.addEventListener('input', updateRoomTotalPreview));
+        div.querySelector('.btn-remove-area').addEventListener('click', function() {
+            div.remove();
+            updateRoomTotalPreview();
+        });
+        return div;
+    }
+
+    function updateRoomTotalPreview() {
+        let totalArea = 0, totalPrice = 0;
+        const allRows = [...groundContainer.querySelectorAll('.area-row'), ...wallContainer.querySelectorAll('.area-row')];
+        allRows.forEach(row => {
+            const length = row.querySelector('.area-length').value;
+            const width = row.querySelector('.area-width').value;
+            const deduct = row.querySelector('.area-deduct').value;
+            const price = row.querySelector('.area-price').value;
+            const net = calcAreaNet(length, width, deduct);
+            totalArea += net;
+            totalPrice += net * parseInput(price);
+        });
+        roomTotalAreaSpan.innerText = totalArea.toFixed(2);
+        roomTotalPriceSpan.innerText = totalPrice.toFixed(2);
+    }
+
+    function openRoomModal(room = null) {
+        groundContainer.innerHTML = '';
+        wallContainer.innerHTML = '';
+        if (room) {
+            currentEditId = room.id;
+            modalTitle.innerText = '✏️ 编辑房间';
+            roomNameInput.value = room.name;
+            room.areas.forEach(area => {
+                const type = area.type || 'ground';
+                const row = createAreaRow(area, type);
+                if (type === 'ground') {
+                    groundContainer.appendChild(row);
+                } else {
+                    wallContainer.appendChild(row);
+                }
+            });
+        } else {
+            currentEditId = null;
+            modalTitle.innerText = '➕ 新增房间';
+            roomNameInput.value = '新房间';
+            groundContainer.appendChild(createAreaRow(null, 'ground'));
+        }
+        updateRoomTotalPreview();
+        modal.classList.add('show');
+    }
+
+    function closeModal() {
+        modal.classList.remove('show');
+        currentEditId = null;
+    }
+
+    addGroundBtn.addEventListener('click', function() {
+        const newRow = createAreaRow(null, 'ground');
+        const groundCount = groundContainer.querySelectorAll('.area-row').length + 1;
+        newRow.querySelector('.area-name').value = `地面${groundCount}`;
+        groundContainer.appendChild(newRow);
+        updateRoomTotalPreview();
+    });
+
+    addWallBtn.addEventListener('click', function() {
+        const newRow = createAreaRow(null, 'wall');
+        const wallCount = wallContainer.querySelectorAll('.area-row').length + 1;
+        newRow.querySelector('.area-name').value = `墙面${wallCount}`;
+        wallContainer.appendChild(newRow);
+        updateRoomTotalPreview();
+    });
+
+    function saveRoom() {
+        const name = roomNameInput.value.trim();
+        if (!name) { alert('请输入房间名称'); return; }
+
+        const groundRows = groundContainer.querySelectorAll('.area-row');
+        const wallRows = wallContainer.querySelectorAll('.area-row');
+        if (groundRows.length + wallRows.length === 0) { alert('请至少添加一个区域'); return; }
+
+        const areas = [];
+        groundRows.forEach(row => {
+            const areaName = row.querySelector('.area-name').value.trim() || '地面';
+            const length = row.querySelector('.area-length').value;
+            const width = row.querySelector('.area-width').value;
+            const deduct = row.querySelector('.area-deduct').value;
+            const price = row.querySelector('.area-price').value;
+            let areaId = row.dataset.areaId;
+            if (!areaId || areaId.startsWith('new_')) {
+                areaId = 'area_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+            }
+            areas.push({ id: areaId, type: 'ground', name: areaName, length, width, deduct, unitPrice: price });
+        });
+        wallRows.forEach(row => {
+            const areaName = row.querySelector('.area-name').value.trim() || '墙面';
+            const length = row.querySelector('.area-length').value;
+            const width = row.querySelector('.area-width').value;
+            const deduct = row.querySelector('.area-deduct').value;
+            const price = row.querySelector('.area-price').value;
+            let areaId = row.dataset.areaId;
+            if (!areaId || areaId.startsWith('new_')) {
+                areaId = 'area_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+            }
+            areas.push({ id: areaId, type: 'wall', name: areaName, length, width, deduct, unitPrice: price });
+        });
+
+        if (currentEditId) {
+            const index = rooms.findIndex(r => r.id === currentEditId);
+            if (index !== -1) {
+                rooms[index] = { id: currentEditId, name: name, areas: areas };
+            }
+        } else {
+            const newId = 'room_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+            rooms.push({ id: newId, name: name, areas: areas });
+        }
+        renderRooms();
+        closeModal();
+    }
+
+    // 事件绑定
+    roomsListEl.addEventListener('click', (e) => {
+        const edit = e.target.closest('.edit-btn');
+        if (edit) {
+            const id = edit.dataset.id;
+            const room = rooms.find(r => r.id === id);
+            if (room) openRoomModal(room);
+            return;
+        }
+        const del = e.target.closest('.delete-btn');
+        if (del) {
+            const id = del.dataset.id;
+            if (confirm('删除此房间？')) {
+                rooms = rooms.filter(r => r.id !== id);
+                renderRooms();
+            }
+        }
+    });
+
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelModalBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => e.target === modal && closeModal());
+    saveRoomBtn.addEventListener('click', saveRoom);
+
+    document.getElementById('addRoomBtn').addEventListener('click', () => openRoomModal(null));
+
+    // 账单管理事件
+    saveBillBtn.addEventListener('click', () => {
+        const billName = billNameInput.value.trim() || '未命名';
+        saveCurrentBill(billName, false);
+    });
+
+    saveAsBillBtn.addEventListener('click', () => {
+        const newName = prompt('请输入新账单名称', billNameInput.value.trim() || '未命名');
+        if (newName && newName.trim()) {
+            const data = getCurrentBillData();
+            const newBill = {
+                id: 'bill_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+                name: newName.trim(),
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                data: data,
+            };
+            billList.push(newBill);
+            currentBillId = newBill.id;
+            saveBillList();
+            billNameInput.value = newName.trim();
+        }
+    });
+
+    historyBillBtn.addEventListener('click', openHistoryModal);
+
+    closeHistoryBtn.addEventListener('click', closeHistoryModal);
+    closeHistoryBtn2.addEventListener('click', closeHistoryModal);
+    historyModal.addEventListener('click', (e) => e.target === historyModal && closeHistoryModal());
+
+    // 重置按钮：恢复默认模板
+    resetBillBtn.addEventListener('click', function() {
+        if (confirm('新建工地会重置为默认模板，所有未保存的数据将丢失。确定吗？')) {
+            rooms = deepCopy(DEFAULT_ROOMS);
+            extraItems = deepCopy(DEFAULT_EXTRA_ITEMS);
+            projectNameInput.value = '';
+            unitNameInput.value = '';
+            contractorInput.value = '';
+            currentBillId = null;
+            billNameInput.value = '未命名';
+            renderRooms();
+            renderExtraItems();
+            updateSummary();
+            hideUndoBar();
+        }
+    });
+
+    // 详细清单功能
+    const detailModal = document.getElementById('detailModal');
+    const detailContent = document.getElementById('detailContent');
+    const closeDetailBtn = document.getElementById('closeDetailBtn');
+    const printDetailBtn = document.getElementById('printDetailBtn');
+
+    document.getElementById('generateDetailBtn').addEventListener('click', function() {
+        generateDetail();
+        detailModal.classList.add('show');
+    });
+
+    closeDetailBtn.addEventListener('click', function() {
+        detailModal.classList.remove('show');
+    });
+    detailModal.addEventListener('click', (e) => {
+        if (e.target === detailModal) detailModal.classList.remove('show');
+    });
+
+    printDetailBtn.addEventListener('click', function() {
+        window.print();
+    });
+
+    function generateDetail() {
+        let html = '';
+
+        const proj = projectNameInput.value.trim() || '（未填）';
+        const unit = unitNameInput.value.trim() || '（未填）';
+        const contr = contractorInput.value.trim() || '（未填）';
+        html += `<div class="detail-section"><h4>🏠 项目信息</h4>`;
+        html += `<p>小区：${proj}　单元：${unit}　负责人：${contr}</p></div>`;
+
+        html += `<div class="detail-section"><h4>📐 房间铺砖明细</h4>`;
+        if (rooms.length === 0) {
+            html += '<p>暂无房间</p>';
+        } else {
+            html += `<table class="detail-table"><thead><tr><th>房间</th><th>区域</th><th>尺寸(长×宽)</th><th>扣除(㎡)</th><th>净面积(㎡)</th><th>单价(元)</th><th>小计(元)</th></tr></thead><tbody>`;
+            let totalRoomSum = 0;
+            rooms.forEach(room => {
+                room.areas.forEach(area => {
+                    const length = area.length || '0';
+                    const width = area.width || '0';
+                    const deduct = parseInput(area.deduct);
+                    const net = calcAreaNet(area.length, area.width, area.deduct);
+                    const price = parseInput(area.unitPrice);
+                    const subtotal = net * price;
+                    totalRoomSum += subtotal;
+                    html += `<tr>
+                        <td>${room.name}</td>
+                        <td>${area.name || (area.type==='ground'?'地面':'墙面')}</td>
+                        <td>${length}×${width}</td>
+                        <td>${deduct.toFixed(2)}</td>
+                        <td>${net.toFixed(2)}</td>
+                        <td>${price.toFixed(2)}</td>
+                        <td>${subtotal.toFixed(2)}</td>
+                    </tr>`;
+                });
+            });
+            html += `<tr class="total-row"><td colspan="6" style="text-align:right;">房间合计</td><td>${totalRoomSum.toFixed(2)}</td></tr>`;
+            html += `</tbody></table>`;
+        }
+        html += `</div>`;
+
+        html += `<div class="detail-section"><h4>⚙️ 附加施工明细</h4>`;
+        const groups = {};
+        extraItems.forEach(item => {
+            if (item.qty > 0 || item.price > 0) {
+                if (!groups[item.cat]) groups[item.cat] = [];
+                groups[item.cat].push(item);
+            }
+        });
+        if (Object.keys(groups).length === 0) {
+            html += '<p>暂无附加项</p>';
+        } else {
+            html += `<table class="detail-table"><thead><tr><th>分类</th><th>项目</th><th>数量</th><th>单位</th><th>单价(元)</th><th>小计(元)</th></tr></thead><tbody>`;
+            let totalExtraSum = 0;
+            for (let cat in groups) {
+                groups[cat].forEach(item => {
+                    const subtotal = item.qty * item.price;
+                    totalExtraSum += subtotal;
+                    html += `<tr>
+                        <td>${cat}</td>
+                        <td>${item.name}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.unit}</td>
+                        <td>${item.price.toFixed(2)}</td>
+                        <td>${subtotal.toFixed(2)}</td>
+                    </tr>`;
+                });
+            }
+            html += `<tr class="total-row"><td colspan="5" style="text-align:right;">附加项合计</td><td>${totalExtraSum.toFixed(2)}</td></tr>`;
+            html += `</tbody></table>`;
+        }
+        html += `</div>`;
+
+        const finalTotal = parseFloat(finalTotalPrice.innerText) || 0;
+        html += `<div style="font-size:2rem; text-align:right; margin-top:30px;"><strong>总计：${finalTotal.toFixed(2)} 元</strong></div>`;
+
+        detailContent.innerHTML = html;
+    }
+
+    // 初始化
+    loadBillList();
+    if (billList.length > 0) {
+        const sorted = [...billList].sort((a,b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        const last = sorted[0];
+        loadBillById(last.id);
+    } else {
+        renderRooms();
+        renderExtraItems();
+        updateSummary();
+    }
+})();
+</script>
+</body>
+</html>
