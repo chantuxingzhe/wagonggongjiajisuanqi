@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>瓦工报价 · 多账单版 + 清单 + 撤销删除 (修复版)</title>
+    <title>瓦工报价 · 完整收费清单版（清单完全展开）</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -290,6 +290,57 @@
         .total-value { font-size: 2.6rem; letter-spacing: 1px; }
         .total-unit { font-size: 1.2rem; opacity: 0.7; margin-left: 8px; }
 
+        /* 收费清单折叠卡片 - 位于总报价下方，完全展开，无内部滚动 */
+        .checklist-toggle {
+            background: #e9f0f9;
+            border: 1px solid #b8cfec;
+            border-radius: 60px;
+            padding: 16px 24px;
+            margin: 10px 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1a4a6f;
+        }
+        .checklist-toggle span { font-size: 1.6rem; transition: transform 0.2s; }
+        .checklist-content {
+            display: none;
+            background: #f9fcff;
+            border-radius: 32px;
+            padding: 20px 16px;
+            margin-bottom: 20px;
+            border: 1px solid #d1e0f0;
+            /* 完全展开，无滚动 */
+            height: auto;
+            overflow: visible;
+            font-size: 0.9rem;
+        }
+        .checklist-content.show { display: block; }
+        .checklist-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .checklist-table th {
+            background: #dde9f5;
+            padding: 10px 6px;
+            font-size: 1rem;
+            /* 移除 sticky，因为容器不滚动 */
+        }
+        .checklist-table td, .checklist-table th {
+            border: 1px solid #cbd9ec;
+            padding: 8px 6px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .checklist-table .category-row {
+            background: #eef2f7;
+            font-weight: 600;
+        }
+        .checklist-table td:first-child { width: 40px; text-align: center; }
+
         .btn-detail {
             background: white;
             border: 2px solid #1a4a6f;
@@ -460,7 +511,7 @@
         @media print {
             body { background: white; padding: 0; font-size: 16pt; }
             .container { max-width: 100%; box-shadow: none; border-radius: 0; }
-            .project-info input, .bill-manage, .btn-add, .room-actions, .extra-delete, .add-extra-line, .modal, .btn-icon, .btn-bill, .btn-add-extra, .del-item-btn, .btn-add-group, .close-btn, .modal-actions, .btn-detail {
+            .project-info input, .bill-manage, .btn-add, .room-actions, .extra-delete, .add-extra-line, .modal, .btn-icon, .btn-bill, .btn-add-extra, .del-item-btn, .btn-add-group, .close-btn, .modal-actions, .btn-detail, .checklist-toggle, .checklist-content {
                 display: none !important;
             }
             .project-info { border: none; background: none; padding: 0 0 10px; }
@@ -476,8 +527,8 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>🧾 瓦工报价 · 多账单版</h1>
-        <p>🔨 保存多个工地 · 随时翻看历史</p>
+        <h1>🧾 瓦工报价 · 完整收费清单版</h1>
+        <p>🔨 保存多个工地 · 内置90+收费项 · 清单完全展开</p>
     </div>
 
     <div class="project-info">
@@ -529,9 +580,19 @@
             <span class="total-label">总报价</span>
             <span><span class="total-value" id="finalTotalPrice">0.00</span><span class="total-unit">元</span></span>
         </div>
+
+        <!-- 完整收费清单折叠卡片（位于总报价下方，完全展开无滚动） -->
+        <div class="checklist-toggle" id="checklistToggle">
+            <span>📋 查看所有可能收费项目清单 (共90+项)</span>
+            <span id="toggleIcon">▼</span>
+        </div>
+        <div class="checklist-content" id="checklistContent">
+            <!-- 动态生成表格，由JS填充 -->
+        </div>
     </div>
 </div>
 
+<!-- 房间编辑模态框 -->
 <div class="modal" id="roomModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -600,7 +661,111 @@
         return JSON.parse(JSON.stringify(obj));
     }
 
-    // 默认房间数据
+    // ================= 完整收费项目列表 (90+项) =================
+    let extraItems = [
+        // 倒角/磨边
+        { id: 'e001', cat: '🔹 倒角/磨边', name: '倒角/海棠角', unit: '米', qty: 0, price: 0 },
+        { id: 'e002', cat: '🔹 倒角/磨边', name: '圆弧倒角', unit: '米', qty: 0, price: 0 },
+        { id: 'e003', cat: '🔹 倒角/磨边', name: '瓷砖磨边', unit: '米', qty: 0, price: 0 },
+
+        // 防水/防潮
+        { id: 'e004', cat: '🔹 防水/防潮', name: '防水处理(地面)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e005', cat: '🔹 防水/防潮', name: '防水处理(墙面)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e006', cat: '🔹 防水/防潮', name: '防滑线/开槽', unit: '米', qty: 0, price: 0 },
+        { id: 'e057', cat: '🔹 防水/防潮', name: '防水保护层(水泥砂浆)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e058', cat: '🔹 防水/防潮', name: '堵漏灵处理(节点)', unit: '项', qty: 0, price: 0 },
+        { id: 'e066', cat: '🔹 防水/防潮', name: '防水附加层（圆弧处理）', unit: '项', qty: 0, price: 0 },
+        { id: 'e068', cat: '🔹 防水/防潮', name: '闭水试验', unit: '次', qty: 0, price: 0 },
+
+        // 开孔/预埋
+        { id: 'e007', cat: '🔹 开孔/预埋', name: '插座开孔', unit: '个', qty: 0, price: 0 },
+        { id: 'e008', cat: '🔹 开孔/预埋', name: '水管开孔', unit: '个', qty: 0, price: 0 },
+        { id: 'e009', cat: '🔹 开孔/预埋', name: '地漏开孔', unit: '个', qty: 0, price: 0 },
+        { id: 'e010', cat: '🔹 开孔/预埋', name: '排气孔开孔', unit: '个', qty: 0, price: 0 },
+
+        // 基层处理
+        { id: 'e011', cat: '🔹 基层处理', name: '拉毛', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e012', cat: '🔹 基层处理', name: '墙面挂网', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e013', cat: '🔹 基层处理', name: '阴阳角找平', unit: '米', qty: 0, price: 0 },
+        { id: 'e014', cat: '🔹 基层处理', name: '地面找平(水泥砂浆)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e015', cat: '🔹 基层处理', name: '地面固化(地固)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e035', cat: '🔹 基层处理', name: '抹灰', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e049', cat: '🔹 基层处理', name: '墙固涂刷', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e050', cat: '🔹 基层处理', name: '地暖回填(豆石)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e051', cat: '🔹 基层处理', name: '墙面冲筋找平(额外)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e074', cat: '🔹 基层处理', name: '铲除旧找平层', unit: '㎡', qty: 0, price: 0 },
+
+        // 特殊造型
+        { id: 'e016', cat: '🔹 特殊造型', name: '拼花/波打线', unit: '米', qty: 0, price: 0 },
+        { id: 'e017', cat: '🔹 特殊造型', name: '斜铺/人字铺', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e018', cat: '🔹 特殊造型', name: '六角砖铺贴', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e019', cat: '🔹 特殊造型', name: '地台/榻榻米铺贴', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e020', cat: '🔹 特殊造型', name: '壁龛制作', unit: '个', qty: 0, price: 0 },
+        { id: 'e021', cat: '🔹 特殊造型', name: '楼梯踏步(每级)', unit: '级', qty: 0, price: 0 },
+        { id: 'e052', cat: '🔹 特殊造型', name: '大板铺贴附加(>900x1800)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e053', cat: '🔹 特殊造型', name: '瓷砖胶薄贴附加', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e054', cat: '🔹 特殊造型', name: '砖砌洗手台(含贴砖)', unit: '米', qty: 0, price: 0 },
+        { id: 'e055', cat: '🔹 特殊造型', name: '阳角条安装', unit: '米', qty: 0, price: 0 },
+        { id: 'e061', cat: '🔹 特殊造型', name: '木纹砖铺贴附加 (普通)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e062', cat: '🔹 特殊造型', name: '马赛克铺贴', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e063', cat: '🔹 特殊造型', name: '地暖区域铺贴附加', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e064', cat: '🔹 特殊造型', name: '壁挂马桶水箱砌筑贴砖', unit: '个', qty: 0, price: 0 },
+        { id: 'e067', cat: '🔹 特殊造型', name: '地砖上墙附加费', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e069', cat: '🔹 特殊造型', name: '腰线/花片铺贴', unit: '米', qty: 0, price: 0 },
+        { id: 'e070', cat: '🔹 特殊造型', name: '窗套/门套铺贴', unit: '米', qty: 0, price: 0 },
+        { id: 'e071', cat: '🔹 特殊造型', name: '文化石/条石铺贴', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e072', cat: '🔹 特殊造型', name: '鱼骨拼铺贴', unit: '㎡', qty: 0, price: 0 },
+
+        // 瓷砖加工
+        { id: 'e022', cat: '🔹 瓷砖加工', name: '瓷砖切割(直切)', unit: '米', qty: 0, price: 0 },
+        { id: 'e023', cat: '🔹 瓷砖加工', name: '瓷砖切割(异形)', unit: '刀', qty: 0, price: 0 },
+        { id: 'e024', cat: '🔹 瓷砖加工', name: '瓷砖背胶', unit: '㎡', qty: 0, price: 0 },
+
+        // 辅料/填缝
+        { id: 'e025', cat: '🔹 辅料/填缝', name: '美缝(环氧彩砂)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e026', cat: '🔹 辅料/填缝', name: '美缝(普通)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e027', cat: '🔹 辅料/填缝', name: '填缝剂', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e065', cat: '🔹 辅料/填缝', name: '瓷砖胶（粘结剂）材料费', unit: '袋', qty: 0, price: 0 },
+
+        // 门槛/窗台
+        { id: 'e028', cat: '🔹 门槛/窗台', name: '门槛石安装', unit: '块', qty: 0, price: 0 },
+        { id: 'e029', cat: '🔹 门槛/窗台', name: '窗台石安装', unit: '米', qty: 0, price: 0 },
+        { id: 'e030', cat: '🔹 门槛/窗台', name: '踢脚线铺贴(暗贴)', unit: '米', qty: 0, price: 0 },
+        { id: 'e031', cat: '🔹 门槛/窗台', name: '踢脚线铺贴(明贴)', unit: '米', qty: 0, price: 0 },
+        { id: 'e056', cat: '🔹 门槛/窗台', name: '淋浴基石安装', unit: '个', qty: 0, price: 0 },
+
+        // 包管/砌筑
+        { id: 'e032', cat: '🔹 包管/砌筑', name: '包下水管(砖砌)', unit: '根', qty: 0, price: 0 },
+        { id: 'e033', cat: '🔹 包管/砌筑', name: '包烟道', unit: '根', qty: 0, price: 0 },
+        { id: 'e034', cat: '🔹 包管/砌筑', name: '砌墙(12墙)', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e059', cat: '🔹 包管/砌筑', name: '卫生间回填(陶粒)', unit: 'm³', qty: 0, price: 0 },
+
+        // 拆除/改造
+        { id: 'e036', cat: '🔹 拆除/改造', name: '铲除旧墙砖', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e037', cat: '🔹 拆除/改造', name: '铲除旧地砖', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e038', cat: '🔹 拆除/改造', name: '铲除防水层', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e039', cat: '🔹 拆除/改造', name: '水电开槽回填', unit: '米', qty: 0, price: 0 },
+        { id: 'e073', cat: '🔹 拆除/改造', name: '拆除墙体（12墙）', unit: '㎡', qty: 0, price: 0 },
+
+        // 搬运/保护
+        { id: 'e040', cat: '🔹 搬运/保护', name: '材料搬运(每层)', unit: '层', qty: 0, price: 0 },
+        { id: 'e041', cat: '🔹 搬运/保护', name: '垃圾清运(每车)', unit: '车', qty: 0, price: 0 },
+        { id: 'e042', cat: '🔹 搬运/保护', name: '成品保护膜', unit: '㎡', qty: 0, price: 0 },
+        { id: 'e075', cat: '🔹 搬运/保护', name: '垃圾装袋/搬运下楼', unit: '层', qty: 0, price: 0 },
+
+        // 其他
+        { id: 'e043', cat: '🔹 其他', name: '地漏安装', unit: '个', qty: 0, price: 0 },
+        { id: 'e044', cat: '🔹 其他', name: '止逆阀安装', unit: '个', qty: 0, price: 0 },
+        { id: 'e045', cat: '🔹 其他', name: '脚手架租赁', unit: '天', qty: 0, price: 0 },
+        { id: 'e046', cat: '🔹 其他', name: '夜间施工费', unit: '项', qty: 0, price: 0 },
+        { id: 'e047', cat: '🔹 其他', name: '远程调遣费', unit: '次', qty: 0, price: 0 },
+        { id: 'e048', cat: '🔹 其他', name: '售后维修(备用)', unit: '小时', qty: 0, price: 0 },
+        { id: 'e060', cat: '🔹 其他', name: '蹲便器安装(含水箱)', unit: '个', qty: 0, price: 0 }
+    ];
+
+    const DEFAULT_EXTRA_ITEMS = deepCopy(extraItems);
+
+    // 默认房间数据 (与原计算器完全一致)
     let rooms = [
         { id: 'r1', name: '客厅', areas: [{ id: 'r1_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
         { id: 'r2', name: '主卧', areas: [{ id: 'r2_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
@@ -629,62 +794,7 @@
         { id: 'r10', name: '过道', areas: [{ id: 'r10_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] }
     ];
 
-    // 保存默认房间的副本，用于重置
     const DEFAULT_ROOMS = deepCopy(rooms);
-
-    // 附加项列表
-    let extraItems = [
-        { id: 'e001', cat: '🔹 倒角/磨边', name: '倒角/海棠角', unit: '米', qty: 0, price: 0 },
-        { id: 'e002', cat: '🔹 倒角/磨边', name: '圆弧倒角', unit: '米', qty: 0, price: 0 },
-        { id: 'e003', cat: '🔹 倒角/磨边', name: '瓷砖磨边', unit: '米', qty: 0, price: 0 },
-        { id: 'e004', cat: '🔹 防水/防潮', name: '防水处理(地面)', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e005', cat: '🔹 防水/防潮', name: '防水处理(墙面)', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e006', cat: '🔹 防水/防潮', name: '防滑线/开槽', unit: '米', qty: 0, price: 0 },
-        { id: 'e007', cat: '🔹 开孔/预埋', name: '插座开孔', unit: '个', qty: 0, price: 0 },
-        { id: 'e008', cat: '🔹 开孔/预埋', name: '水管开孔', unit: '个', qty: 0, price: 0 },
-        { id: 'e009', cat: '🔹 开孔/预埋', name: '地漏开孔', unit: '个', qty: 0, price: 0 },
-        { id: 'e010', cat: '🔹 开孔/预埋', name: '排气孔开孔', unit: '个', qty: 0, price: 0 },
-        { id: 'e011', cat: '🔹 基层处理', name: '拉毛', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e012', cat: '🔹 基层处理', name: '墙面挂网', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e013', cat: '🔹 基层处理', name: '阴阳角找平', unit: '米', qty: 0, price: 0 },
-        { id: 'e014', cat: '🔹 基层处理', name: '地面找平(水泥砂浆)', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e015', cat: '🔹 基层处理', name: '地面固化(地固)', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e016', cat: '🔹 特殊造型', name: '拼花/波打线', unit: '米', qty: 0, price: 0 },
-        { id: 'e017', cat: '🔹 特殊造型', name: '斜铺/人字铺', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e018', cat: '🔹 特殊造型', name: '六角砖铺贴', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e019', cat: '🔹 特殊造型', name: '地台/榻榻米铺贴', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e020', cat: '🔹 特殊造型', name: '壁龛制作', unit: '个', qty: 0, price: 0 },
-        { id: 'e021', cat: '🔹 特殊造型', name: '楼梯踏步(每级)', unit: '级', qty: 0, price: 0 },
-        { id: 'e022', cat: '🔹 瓷砖加工', name: '瓷砖切割(直切)', unit: '米', qty: 0, price: 0 },
-        { id: 'e023', cat: '🔹 瓷砖加工', name: '瓷砖切割(异形)', unit: '刀', qty: 0, price: 0 },
-        { id: 'e024', cat: '🔹 瓷砖加工', name: '瓷砖背胶', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e025', cat: '🔹 辅料/填缝', name: '美缝(环氧彩砂)', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e026', cat: '🔹 辅料/填缝', name: '美缝(普通)', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e027', cat: '🔹 辅料/填缝', name: '填缝剂', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e028', cat: '🔹 门槛/窗台', name: '门槛石安装', unit: '块', qty: 0, price: 0 },
-        { id: 'e029', cat: '🔹 门槛/窗台', name: '窗台石安装', unit: '米', qty: 0, price: 0 },
-        { id: 'e030', cat: '🔹 门槛/窗台', name: '踢脚线铺贴(暗贴)', unit: '米', qty: 0, price: 0 },
-        { id: 'e031', cat: '🔹 门槛/窗台', name: '踢脚线铺贴(明贴)', unit: '米', qty: 0, price: 0 },
-        { id: 'e032', cat: '🔹 包管/砌筑', name: '包下水管(砖砌)', unit: '根', qty: 0, price: 0 },
-        { id: 'e033', cat: '🔹 包管/砌筑', name: '包烟道', unit: '根', qty: 0, price: 0 },
-        { id: 'e034', cat: '🔹 包管/砌筑', name: '砌墙(12墙)', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e035', cat: '🔹 包管/砌筑', name: '抹灰', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e036', cat: '🔹 拆除/改造', name: '铲除旧地砖', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e037', cat: '🔹 拆除/改造', name: '铲除旧墙砖', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e038', cat: '🔹 拆除/改造', name: '铲除防水层', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e039', cat: '🔹 拆除/改造', name: '水电开槽回填', unit: '米', qty: 0, price: 0 },
-        { id: 'e040', cat: '🔹 搬运/保护', name: '材料搬运(每层)', unit: '层', qty: 0, price: 0 },
-        { id: 'e041', cat: '🔹 搬运/保护', name: '垃圾清运(每车)', unit: '车', qty: 0, price: 0 },
-        { id: 'e042', cat: '🔹 搬运/保护', name: '成品保护膜', unit: '㎡', qty: 0, price: 0 },
-        { id: 'e043', cat: '🔹 其他', name: '地漏安装', unit: '个', qty: 0, price: 0 },
-        { id: 'e044', cat: '🔹 其他', name: '止逆阀安装', unit: '个', qty: 0, price: 0 },
-        { id: 'e045', cat: '🔹 其他', name: '脚手架租赁', unit: '天', qty: 0, price: 0 },
-        { id: 'e046', cat: '🔹 其他', name: '夜间施工费', unit: '项', qty: 0, price: 0 },
-        { id: 'e047', cat: '🔹 其他', name: '远程调遣费', unit: '次', qty: 0, price: 0 },
-        { id: 'e048', cat: '🔹 其他', name: '售后维修(备用)', unit: '小时', qty: 0, price: 0 },
-    ];
-
-    const DEFAULT_EXTRA_ITEMS = deepCopy(extraItems);
 
     // 当前编辑的房间ID
     let currentEditId = null;
@@ -887,7 +997,7 @@
     // 撤销相关
     const undoBar = document.getElementById('undoDeleteBar');
     const undoBtn = document.getElementById('undoDeleteBtn');
-    let deletedExtraItemsStack = [];   // 改为栈，支持多次撤销
+    let deletedExtraItemsStack = [];
 
     function showUndoBar() {
         undoBar.style.display = 'flex';
@@ -895,21 +1005,18 @@
 
     function hideUndoBar() {
         undoBar.style.display = 'none';
-        deletedExtraItemsStack = [];   // 清空栈
+        deletedExtraItemsStack = [];
     }
 
-    // 撤销点击事件
     undoBtn.addEventListener('click', function() {
         if (deletedExtraItemsStack.length === 0) {
             hideUndoBar();
             return;
         }
-        const restoredItem = deletedExtraItemsStack.pop(); // 弹出最近删除的项
+        const restoredItem = deletedExtraItemsStack.pop();
         extraItems.push(restoredItem);
-        renderExtraItems(); // 重新渲染以显示恢复的项
+        renderExtraItems();
         updateSummary();
-
-        // 如果栈中还有剩余项，继续显示撤销条；否则隐藏
         if (deletedExtraItemsStack.length > 0) {
             undoBar.style.display = 'flex';
         } else {
@@ -999,41 +1106,38 @@
         html += `<div class="add-extra-line"><button class="btn-add-extra" id="addCustomExtraBtn">➕ 添加自定义项目</button></div>`;
         extraContainer.innerHTML = html;
 
-        // 绑定输入事件（隐藏撤销条）
         document.querySelectorAll('.extra-qty-input').forEach(inp => {
             inp.addEventListener('input', function(e) {
                 const id = this.dataset.id; const val = parseFloat(this.value) || 0;
                 const item = extraItems.find(i => i.id === id); if (item) { item.qty = val; updateExtraSubtotal(id); updateSummary(); }
-                hideUndoBar(); // 修改数据时隐藏撤销
+                hideUndoBar();
             });
         });
         document.querySelectorAll('.extra-price-input').forEach(inp => {
             inp.addEventListener('input', function(e) {
                 const id = this.dataset.id; const val = parseFloat(this.value) || 0;
                 const item = extraItems.find(i => i.id === id); if (item) { item.price = val; updateExtraSubtotal(id); updateSummary(); }
-                hideUndoBar(); // 修改数据时隐藏撤销
+                hideUndoBar();
             });
         });
-        // 绑定删除事件（保存被删项，推入栈，重新渲染，显示撤销条）
         document.querySelectorAll('.del-item-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 const item = extraItems.find(i => i.id === id);
                 if (item) {
-                    deletedExtraItemsStack.push(deepCopy(item)); // 保存深拷贝
+                    deletedExtraItemsStack.push(deepCopy(item));
                 }
                 extraItems = extraItems.filter(i => i.id !== id);
-                renderExtraItems(); // 重新渲染
+                renderExtraItems();
                 if (deletedExtraItemsStack.length > 0) {
                     undoBar.style.display = 'flex';
                 }
                 updateSummary();
             });
         });
-        // 绑定添加自定义按钮
         document.getElementById('addCustomExtraBtn')?.addEventListener('click', function() {
             addCustomExtra();
-            hideUndoBar(); // 添加新项时隐藏撤销
+            hideUndoBar();
         });
     }
 
@@ -1390,6 +1494,41 @@
 
         detailContent.innerHTML = html;
     }
+
+    // ---------- 折叠清单功能 ----------
+    const toggleBtn = document.getElementById('checklistToggle');
+    const checklistContent = document.getElementById('checklistContent');
+    const toggleIcon = document.getElementById('toggleIcon');
+
+    function renderChecklistTable() {
+        const groups = {};
+        extraItems.forEach(item => {
+            if (!groups[item.cat]) groups[item.cat] = [];
+            groups[item.cat].push(item);
+        });
+
+        let html = '<table class="checklist-table"><thead><tr><th>#</th><th>分类</th><th>项目名称</th><th>单位</th></tr></thead><tbody>';
+        let index = 1;
+        for (let cat in groups) {
+            html += `<tr class="category-row"><td colspan="4" style="background:#d4e3f5;">${cat}</td></tr>`;
+            groups[cat].forEach(item => {
+                html += `<tr><td>${index++}</td><td>${cat}</td><td>${item.name}</td><td>${item.unit}</td></tr>`;
+            });
+        }
+        html += '</tbody></table>';
+        checklistContent.innerHTML = html;
+    }
+
+    toggleBtn.addEventListener('click', function() {
+        if (checklistContent.classList.contains('show')) {
+            checklistContent.classList.remove('show');
+            toggleIcon.innerText = '▼';
+        } else {
+            renderChecklistTable();
+            checklistContent.classList.add('show');
+            toggleIcon.innerText = '▲';
+        }
+    });
 
     // 初始化
     loadBillList();
