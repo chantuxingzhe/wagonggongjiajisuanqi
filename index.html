@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>瓦工报价 · 完整收费清单版（清单完全展开）</title>
+    <title>瓦工报价 · 完整收费清单版（底部清单静态固定）</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -290,7 +290,7 @@
         .total-value { font-size: 2.6rem; letter-spacing: 1px; }
         .total-unit { font-size: 1.2rem; opacity: 0.7; margin-left: 8px; }
 
-        /* 收费清单折叠卡片 - 位于总报价下方，完全展开，无内部滚动 */
+        /* 收费清单折叠卡片 - 位于总报价下方，完全展开，静态内容 */
         .checklist-toggle {
             background: #e9f0f9;
             border: 1px solid #b8cfec;
@@ -313,7 +313,6 @@
             padding: 20px 16px;
             margin-bottom: 20px;
             border: 1px solid #d1e0f0;
-            /* 完全展开，无滚动 */
             height: auto;
             overflow: visible;
             font-size: 0.9rem;
@@ -327,7 +326,6 @@
             background: #dde9f5;
             padding: 10px 6px;
             font-size: 1rem;
-            /* 移除 sticky，因为容器不滚动 */
         }
         .checklist-table td, .checklist-table th {
             border: 1px solid #cbd9ec;
@@ -528,7 +526,7 @@
 <div class="container">
     <div class="header">
         <h1>🧾 瓦工报价 · 完整收费清单版</h1>
-        <p>🔨 保存多个工地 · 内置90+收费项 · 清单完全展开</p>
+        <p>🔨 保存多个工地 · 底部清单静态固定</p>
     </div>
 
     <div class="project-info">
@@ -581,13 +579,13 @@
             <span><span class="total-value" id="finalTotalPrice">0.00</span><span class="total-unit">元</span></span>
         </div>
 
-        <!-- 完整收费清单折叠卡片（位于总报价下方，完全展开无滚动） -->
+        <!-- 完整收费清单折叠卡片（静态，不随上方删除而改变） -->
         <div class="checklist-toggle" id="checklistToggle">
             <span>📋 查看所有可能收费项目清单 (共90+项)</span>
             <span id="toggleIcon">▼</span>
         </div>
         <div class="checklist-content" id="checklistContent">
-            <!-- 动态生成表格，由JS填充 -->
+            <!-- 动态生成表格，由JS填充，基于静态数据 -->
         </div>
     </div>
 </div>
@@ -661,8 +659,8 @@
         return JSON.parse(JSON.stringify(obj));
     }
 
-    // ================= 完整收费项目列表 (90+项) =================
-    let extraItems = [
+    // ================= 完整收费项目列表 (90+项) 静态数据 =================
+    const FULL_EXTRA_ITEMS = [
         // 倒角/磨边
         { id: 'e001', cat: '🔹 倒角/磨边', name: '倒角/海棠角', unit: '米', qty: 0, price: 0 },
         { id: 'e002', cat: '🔹 倒角/磨边', name: '圆弧倒角', unit: '米', qty: 0, price: 0 },
@@ -763,9 +761,12 @@
         { id: 'e060', cat: '🔹 其他', name: '蹲便器安装(含水箱)', unit: '个', qty: 0, price: 0 }
     ];
 
+    // 可变的附加项列表（用于上方填写）
+    let extraItems = deepCopy(FULL_EXTRA_ITEMS);
+
     const DEFAULT_EXTRA_ITEMS = deepCopy(extraItems);
 
-    // 默认房间数据 (与原计算器完全一致)
+    // 默认房间数据
     let rooms = [
         { id: 'r1', name: '客厅', areas: [{ id: 'r1_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
         { id: 'r2', name: '主卧', areas: [{ id: 'r2_area1', type: 'ground', name: '地面', length: '', width: '', deduct: '', unitPrice: '' }] },
@@ -1090,7 +1091,7 @@
         updateSummary();
     }
 
-    // 渲染附加项
+    // 渲染附加项（使用可变的 extraItems）
     function renderExtraItems() {
         const groups = {};
         extraItems.forEach(item => { if (!groups[item.cat]) groups[item.cat] = []; groups[item.cat].push(item); });
@@ -1495,14 +1496,14 @@
         detailContent.innerHTML = html;
     }
 
-    // ---------- 折叠清单功能 ----------
+    // ---------- 折叠清单功能（使用静态数据 FULL_EXTRA_ITEMS）----------
     const toggleBtn = document.getElementById('checklistToggle');
     const checklistContent = document.getElementById('checklistContent');
     const toggleIcon = document.getElementById('toggleIcon');
 
     function renderChecklistTable() {
         const groups = {};
-        extraItems.forEach(item => {
+        FULL_EXTRA_ITEMS.forEach(item => {
             if (!groups[item.cat]) groups[item.cat] = [];
             groups[item.cat].push(item);
         });
